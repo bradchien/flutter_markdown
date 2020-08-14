@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import '../shared/markdown_demo_widget.dart';
 import '../shared/markdown_extensions.dart';
 
@@ -141,7 +142,7 @@ class DemoNotesView extends StatelessWidget {
           return Markdown(
             data: snapshot.data,
             extensionSet: MarkdownExtensionSet.githubFlavored.value,
-            onTapLink: (href) => linkOnTapHandler(context, href),
+            onTapLink: (text, href) => linkOnTapHandler(context, href),
           );
         } else {
           return CircularProgressIndicator();
