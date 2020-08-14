@@ -275,10 +275,14 @@ void main() {
 
   group('Links', () {
     testWidgets('should be tappable', (WidgetTester tester) async {
+      String linkText;
       String tapResult;
       await tester.pumpWidget(_boilerplate(Markdown(
         data: '[Link Text](href)',
-        onTapLink: (value) => tapResult = value,
+        onTapLink: (text, value) {
+          linkText = text;
+          tapResult = value;
+        },
       )));
 
       final RichText textWidget = tester.widget(find.byType(RichText));
@@ -288,6 +292,7 @@ void main() {
 
       expect(span.children, null);
       expect(span.recognizer.runtimeType, equals(TapGestureRecognizer));
+      expect(linkText, 'Link Text');
       expect(tapResult, 'href');
     });
 
@@ -296,7 +301,7 @@ void main() {
       final List<String> tapResults = <String>[];
       await tester.pumpWidget(_boilerplate(Markdown(
         data: '[Link `with nested code` Text](href)',
-        onTapLink: (value) => tapResults.add(value),
+        onTapLink: (text, value) => tapResults.add(value),
       )));
 
       final RichText textWidget = tester.widget(find.byType(RichText));
@@ -324,7 +329,7 @@ void main() {
 
       await tester.pumpWidget(_boilerplate(Markdown(
         data: '[First Link](firstHref) and [Second Link](secondHref)',
-        onTapLink: (value) => tapResults.add(value),
+        onTapLink: (text, value) => tapResults.add(value),
       )));
 
       final RichText textWidget =
@@ -453,7 +458,7 @@ void main() {
       final List<String> tapResults = <String>[];
       await tester.pumpWidget(_boilerplate(Markdown(
         data: '[![alt](https://img#50x50)](href)',
-        onTapLink: (value) => tapResults.add(value),
+        onTapLink: (text, value) => tapResults.add(value),
       )));
 
       final GestureDetector detector =
@@ -470,7 +475,7 @@ void main() {
       final List<String> tapResults = <String>[];
       await tester.pumpWidget(_boilerplate(Markdown(
         data: '[Text before ![alt](https://img#50x50) text after](href)',
-        onTapLink: (value) => tapResults.add(value),
+        onTapLink: (text, value) => tapResults.add(value),
       )));
 
       final GestureDetector detector =
@@ -504,7 +509,7 @@ void main() {
       await tester.pumpWidget(_boilerplate(Markdown(
         data:
             '[Link before](firstHref)[![alt](https://img#50x50)](imageHref)[link after](secondHref)',
-        onTapLink: (value) => tapResults.add(value),
+        onTapLink: (text, value) => tapResults.add(value),
       )));
 
       final Iterable<RichText> texts = tester.widgetList(find.byType(RichText));

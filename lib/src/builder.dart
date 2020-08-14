@@ -76,7 +76,7 @@ class _InlineElement {
 abstract class MarkdownBuilderDelegate {
   /// Returns a gesture recognizer to use for an `a` element with the given
   /// `href` attribute.
-  GestureRecognizer createLink(String href);
+  GestureRecognizer createLink(String text, String href);
 
   /// Returns formatted text to use to display the given contents of a `pre`
   /// element.
@@ -202,7 +202,11 @@ class MarkdownBuilder implements md.NodeVisitor {
     }
 
     if (tag == 'a') {
-      _linkHandlers.add(delegate.createLink(element.attributes['href']));
+      _linkHandlers.add(delegate.createLink(
+          (element.children?.first is md.Text)
+              ? (element.children?.first as md.Text).text
+              : null,
+          element.attributes['href']));
     }
 
     return true;
