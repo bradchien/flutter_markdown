@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -91,6 +93,8 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.syntaxHighlighter,
     this.onTapLink,
     this.imageDirectory,
+    this.blockSyntaxes,
+    this.inlineSyntaxes,
     this.extensionSet,
     this.imageBuilder,
     this.checkboxBuilder,
@@ -129,6 +133,12 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// The base directory holding images referenced by Img tags with local or network file paths.
   final String imageDirectory;
+
+  /// Collection of custom block syntax types to be used parsing the Markdown data.
+  final List<md.BlockSyntax> blockSyntaxes;
+
+  /// Collection of custom inline syntax types to be used parsing the Markdown data.
+  final List<md.InlineSyntax> inlineSyntaxes;
 
   /// Markdown syntax extension set
   ///
@@ -200,19 +210,19 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
 
     _disposeRecognizers();
 
-    /// FIXME: Enhance it using a single RegEx
-    final List<String> lines = widget.data
-        .replaceAll(RegExp(r'[ ]{2}(\r?\n)'), '  &amp;')
-        .split(RegExp(r'\r?\n'))
-        .map((e) => e?.replaceAll(RegExp(r'  &amp;'), '  \n'))
-        .toList();
     final md.Document document = md.Document(
+      blockSyntaxes: widget.blockSyntaxes,
+      inlineSyntaxes: (widget.inlineSyntaxes ?? [])..add(TaskListSyntax()),
       extensionSet: widget.extensionSet ?? md.ExtensionSet.gitHubFlavored,
-      inlineSyntaxes: (widget.extensionSet?.inlineSyntaxes ?? [])
-        ..add(TaskListSyntax())
-        ..map((syntax) => syntax),
       encodeHtml: false,
     );
+
+    // Parse the source Markdown data into nodes of an Abstract Syntax Tree.
+    final List<String> lines = LineSplitter().convert(widget.data);
+    final List<md.Node> astNodes = document.parseLines(lines);
+
+    // Configure a Markdown widget builder to traverse the AST nodes and
+    // create a widget tree based on the elements.
     final MarkdownBuilder builder = MarkdownBuilder(
       delegate: this,
       selectable: widget.selectable,
@@ -223,7 +233,8 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
       builders: widget.builders,
       fitContent: widget.fitContent,
     );
-    _children = builder.build(document.parseLines(lines));
+
+    _children = builder.build(astNodes);
   }
 
   void _disposeRecognizers() {
@@ -277,6 +288,8 @@ class MarkdownBody extends MarkdownWidget {
     SyntaxHighlighter syntaxHighlighter,
     MarkdownTapLinkCallback onTapLink,
     String imageDirectory,
+    List<md.BlockSyntax> blockSyntaxes,
+    List<md.InlineSyntax> inlineSyntaxes,
     md.ExtensionSet extensionSet,
     MarkdownImageBuilder imageBuilder,
     MarkdownCheckboxBuilder checkboxBuilder,
@@ -292,6 +305,8 @@ class MarkdownBody extends MarkdownWidget {
           syntaxHighlighter: syntaxHighlighter,
           onTapLink: onTapLink,
           imageDirectory: imageDirectory,
+          blockSyntaxes: blockSyntaxes,
+          inlineSyntaxes: inlineSyntaxes,
           extensionSet: extensionSet,
           imageBuilder: imageBuilder,
           checkboxBuilder: checkboxBuilder,
@@ -336,6 +351,8 @@ class Markdown extends MarkdownWidget {
     SyntaxHighlighter syntaxHighlighter,
     MarkdownTapLinkCallback onTapLink,
     String imageDirectory,
+    List<md.BlockSyntax> blockSyntaxes,
+    List<md.InlineSyntax> inlineSyntaxes,
     md.ExtensionSet extensionSet,
     MarkdownImageBuilder imageBuilder,
     MarkdownCheckboxBuilder checkboxBuilder,
@@ -353,6 +370,8 @@ class Markdown extends MarkdownWidget {
           syntaxHighlighter: syntaxHighlighter,
           onTapLink: onTapLink,
           imageDirectory: imageDirectory,
+          blockSyntaxes: blockSyntaxes,
+          inlineSyntaxes: inlineSyntaxes,
           extensionSet: extensionSet,
           imageBuilder: imageBuilder,
           checkboxBuilder: checkboxBuilder,

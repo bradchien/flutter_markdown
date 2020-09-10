@@ -173,10 +173,13 @@ class MarkdownBuilder implements md.NodeVisitor {
       builders[tag].visitElementBefore(element);
     }
 
+    var start;
     if (_isBlockTag(tag)) {
       _addAnonymousBlockIfNeeded();
       if (_isListTag(tag)) {
         _listIndents.add(tag);
+        if (element.attributes["start"] != null)
+          start = int.parse(element.attributes["start"]) - 1;
       } else if (tag == 'blockquote') {
         _isInBlockquote = true;
       } else if (tag == 'table') {
@@ -190,7 +193,9 @@ class MarkdownBuilder implements md.NodeVisitor {
           children: <Widget>[],
         ));
       }
-      _blocks.add(_BlockElement(tag));
+      var bElement = _BlockElement(tag);
+      if (start != null) bElement.nextListIndex = start;
+      _blocks.add(bElement);
     } else {
       _addParentInlineIfNeeded(_blocks.last.tag);
 
@@ -202,14 +207,20 @@ class MarkdownBuilder implements md.NodeVisitor {
     }
 
     if (tag == 'a') {
-      _linkHandlers.add(delegate.createLink(
-          (element.children?.first is md.Text)
-              ? (element.children?.first as md.Text).text
-              : null,
-          element.attributes['href']));
+      String text = extractTextFromElement(element);
+
+      _linkHandlers.add(delegate.createLink(text, element.attributes['href']));
     }
 
     return true;
+  }
+
+  String extractTextFromElement(element) {
+    return element is md.Element && (element.children?.isNotEmpty ?? false)
+        ? element.children
+            .map((e) => e is md.Text ? e.text : extractTextFromElement(e))
+            .join("")
+        : ((element.attributes?.isNotEmpty ?? false) ? element.attributes["alt"] : "");
   }
 
   @override
