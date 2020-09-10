@@ -86,8 +86,8 @@ void main() {
 
     final Iterable<Widget> widgets = tester.allWidgets;
     _expectWidgetTypes(
-        widgets, <Type>[Directionality, MarkdownBody, Column, Wrap, RichText]);
-    _expectTextStrings(widgets, <String>['line 1\n\nline 2']);
+        widgets, <Type>[Directionality, MarkdownBody, Column, Column, Wrap, RichText, SizedBox, Column, Wrap, RichText]);
+    _expectTextStrings(widgets, <String>['line 1  ', 'line 2']);
   });
 
   testWidgets('Non-applicable line break', (WidgetTester tester) async {
